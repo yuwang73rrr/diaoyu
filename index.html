@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="钓鱼指南">
+    <title>每日钓鱼指南</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --surface-raised: #334155;
+            --text: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --positive: #4ade80;
+            --positive-bg: rgba(74, 222, 128, 0.12);
+            --warning: #fbbf24;
+            --warning-bg: rgba(251, 191, 36, 0.12);
+            --danger: #f87171;
+            --danger-bg: rgba(248, 113, 113, 0.12);
+            --accent: #38bdf8;
+            --border: #334155;
+            --shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding-bottom: env(safe-area-inset-bottom, 0);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .app-container {
+            max-width: 430px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        /* 顶部栏 */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0 16px;
+        }
+        .header h1 {
+            font-size: 22px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .header-icon {
+            width: 32px; height: 32px;
+            background: var(--positive-bg);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .header-icon svg { width: 18px; height: 18px; }
+
+        /* 定位信息 */
+        .location-bar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+        .location-bar svg { width: 14px; height: 14px; opacity: 0.7; }
+
+        /* 主评分卡片 */
+        .score-card {
+            background: var(--surface);
+            border-radius: 20px;
+            padding: 28px 24px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 16px;
+            border: 1px solid var(--border);
+        }
+        .score-card::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle, var(--glow-color, rgba(74,222,128,0.08)) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .score-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .score-value {
+            font-size: 72px;
+            font-weight: 700;
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+            transition: color 0.3s ease;
+        }
+        .score-unit {
+            font-size: 20px;
+            font-weight: 500;
+            opacity: 0.6;
+        }
+        .score-status {
+            font-size: 15px;
+            font-weight: 600;
+            margin-top: 8px;
+            padding: 6px 16px;
+            border-radius: 20px;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        /* 建议框 */
+        .advice-box {
+            background: var(--surface-raised);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            border-left: 3px solid var(--accent);
+        }
+        .advice-icon {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .advice-icon svg { width: 20px; height: 20px; }
+        .advice-content h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .advice-content p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* 数据网格 */
+        .data-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .data-item {
+            background: var(--surface);
+            border-radius: 14px;
+            padding: 16px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+        .data-item .label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+        .data-item .value {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text);
+            font-variant-numeric: tabular-nums;
+        }
+        .data-item .sub {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        /* 标签 */
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .tag {
+            font-size: 12px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .tag svg { width: 12px; height: 12px; }
+
+        /* 7天预测 */
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 24px 0 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .forecast-list {
+            background: var(--surface);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+        .forecast-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.2s;
+        }
+        .forecast-item:last-child { border-bottom: none; }
+        .forecast-item:active { background: var(--surface-raised); }
+        .forecast-day {
+            width: 50px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+        .forecast-date {
+            flex: 1;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        .forecast-score {
+            font-size: 18px;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+            margin-right: 12px;
+        }
+        .forecast-bar {
+            width: 60px;
+            height: 6px;
+            background: var(--surface-raised);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .forecast-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+
+        /* 钓鱼技巧 */
+        .tips-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .tip-card {
+            background: var(--surface);
+            border-radius: 14px;
+            padding: 16px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .tip-card:active { transform: scale(0.98); }
+        .tip-card:hover { border-color: var(--accent); }
+        .tip-card .icon {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 10px;
+        }
+        .tip-card h4 {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .tip-card p {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* 底部按钮 */
+        .refresh-btn {
+            width: 100%;
+            background: var(--surface-raised);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 20px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .refresh-btn:active {
+            transform: scale(0.98);
+            background: var(--surface);
+        }
+        .refresh-btn svg { width: 16px; height: 16px; }
+
+        /* 安装提示 */
+        .install-banner {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0));
+            display: none;
+            align-items: center;
+            gap: 12px;
+            z-index: 100;
+            animation: slideUp 0.3s ease;
+        }
+        .install-banner.show { display: flex; }
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .install-text { flex: 1; font-size: 13px; }
+        .install-text strong { display: block; font-size: 14px; margin-bottom: 2px; }
+        .install-btn {
+            background: var(--positive);
+            color: #0f172a;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .install-close {
+            background: none; border: none; color: var(--text-muted);
+            font-size: 18px; cursor: pointer; padding: 4px;
+        }
+
+        /* 模态框 */
+        .modal-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.6);
+            display: none; align-items: center; justify-content: center;
+            z-index: 200; padding: 20px;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal {
+            background: var(--surface);
+            border-radius: 20px;
+            padding: 24px;
+            max-width: 360px;
+            width: 100%;
+            border: 1px solid var(--border);
+            animation: modalIn 0.2s ease;
+        }
+        @keyframes modalIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .modal h3 { font-size: 18px; margin-bottom: 12px; }
+        .modal p { font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 16px; }
+        .modal-btn {
+            width: 100%;
+            background: var(--surface-raised);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        /* 加载动画 */
+        .loading {
+            display: inline-block;
+            width: 16px; height: 16px;
+            border: 2px solid var(--text-muted);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 顶部 -->
+        <div class="header">
+            <h1>
+                <div class="header-icon" style="color: var(--positive);">
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M18.9 10.8C18.9 7.09 16.25 3.9 12 3.9c-4.26 0-6.9 3.15-6.9 6.9 0 2.4 1.5 4.8 3.3 6.6L12 21l3.6-3.6c1.8-1.8 3.3-4.2 3.3-6.6zM12 13.2c-1.33 0-2.4-1.07-2.4-2.4s1.07-2.4 2.4-2.4 2.4 1.07 2.4 2.4-1.07 2.4-2.4 2.4z" fill="currentColor"/></svg>
+                </div>
+                每日钓鱼指南
+            </h1>
+            <span id="current-time" style="font-size: 13px; color: var(--text-muted);"></span>
+        </div>
+
+        <!-- 定位 -->
+        <div class="location-bar">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/></svg>
+            <span id="location-text">定位中...</span>
+        </div>
+
+        <!-- 主评分 -->
+        <div class="score-card" id="score-card">
+            <div class="score-label">今日钓鱼指数</div>
+            <div class="score-value" id="score-display">--<span class="score-unit">分</span></div>
+            <div class="score-status" id="score-status">评估中...</div>
+        </div>
+
+        <!-- 建议 -->
+        <div class="advice-box" id="advice-box">
+            <div class="advice-icon" id="advice-icon" style="background: var(--positive-bg); color: var(--positive);">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" fill="currentColor"/></svg>
+            </div>
+            <div class="advice-content">
+                <h3 id="advice-title">获取数据中</h3>
+                <p id="advice-text">正在分析天气条件，请稍候...</p>
+            </div>
+        </div>
+
+        <!-- 数据 -->
+        <div class="data-grid">
+            <div class="data-item">
+                <div class="label">风力</div>
+                <div class="value" id="wind-value">--</div>
+                <div class="sub" id="wind-desc">级</div>
+            </div>
+            <div class="data-item">
+                <div class="label">气压</div>
+                <div class="value" id="pressure-value">--</div>
+                <div class="sub" id="pressure-trend">--</div>
+            </div>
+            <div class="data-item">
+                <div class="label">温度</div>
+                <div class="value" id="temp-value">--</div>
+                <div class="sub" id="temp-desc">体感舒适</div>
+            </div>
+            <div class="data-item">
+                <div class="label">湿度</div>
+                <div class="value" id="humidity-value">--</div>
+                <div class="sub" id="humidity-desc">--</div>
+            </div>
+        </div>
+
+        <!-- 标签 -->
+        <div class="tags" id="detail-tags"></div>
+
+        <!-- 7天预测 -->
+        <div class="section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="color: var(--accent);">
+                <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z" fill="currentColor"/>
+            </svg>
+            未来7天预测
+        </div>
+        <div class="forecast-list" id="forecast-list"></div>
+
+        <!-- 钓鱼技巧 -->
+        <div class="section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="color: var(--warning);">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor"/>
+            </svg>
+            钓鱼小贴士
+        </div>
+        <div class="tips-grid" id="tips-grid"></div>
+
+        <!-- 刷新按钮 -->
+        <button class="refresh-btn" onclick="refreshAll()">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor"/></svg>
+            刷新评估
+        </button>
+    </div>
+
+    <!-- 安装提示 -->
+    <div class="install-banner" id="install-banner">
+        <div class="install-text">
+            <strong>添加到桌面</strong>
+            像 App 一样使用，离线也能查看
+        </div>
+        <button class="install-btn" onclick="showInstallGuide()">如何添加</button>
+        <button class="install-close" onclick="dismissInstall()">&times;</button>
+    </div>
+
+    <!-- 安装指南模态框 -->
+    <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <h3>添加到桌面</h3>
+            <p id="install-guide-text">
+                <strong>iPhone/iPad：</strong>点击 Safari 底部分享按钮，选择「添加到主屏幕」<br><br>
+                <strong>Android：</strong>点击 Chrome 菜单（⋮），选择「添加到主屏幕」或「安装应用」<br><br>
+                <strong>电脑：</strong>点击 Chrome 地址栏右侧的「安装」图标
+            </p>
+            <button class="modal-btn" onclick="closeModal()">知道了</button>
+        </div>
+    </div>
+
+    <script>
+        // ===== 数据与逻辑 =====
+        const fishingTips = [
+            { icon: '🌅', title: '黄金时段', desc: '日出前后1小时，鱼儿最活跃', color: 'var(--warning)', bg: 'var(--warning-bg)' },
+            { icon: '🌡️', title: '温度法则', desc: '水温18-25°C时，鱼类摄食最旺盛', color: 'var(--positive)', bg: 'var(--positive-bg)' },
+            { icon: '💨', title: '风向选择', desc: '东南风好钓鱼，西北风收竿回家', color: 'var(--accent)', bg: 'rgba(56,189,248,0.12)' },
+            { icon: '🌙', title: '月相影响', desc: '满月前后3天，夜钓效果最佳', color: 'var(--warning)', bg: 'var(--warning-bg)' },
+            { icon: '🪱', title: '饵料搭配', desc: '春腥夏淡秋香冬浓，随季节调整', color: 'var(--positive)', bg: 'var(--positive-bg)' },
+            { icon: '📍', title: '钓点选择', desc: '水草边、洄水湾、深浅交界处', color: 'var(--accent)', bg: 'rgba(56,189,248,0.12)' },
+        ];
+
+        const weekDays = ['周日','周一','周二','周三','周四','周五','周六'];
+
+        function getWeatherData(offset = 0) {
+            const seed = new Date().getDate() + offset * 7;
+            const wind = Math.floor((Math.sin(seed) * 0.5 + 0.5) * 5) + 1;
+            const pressure = 1008 + Math.floor((Math.sin(seed * 2) * 0.5 + 0.5) * 18);
+            const isRising = Math.sin(seed * 3) > 0;
+            const temp = 15 + Math.floor((Math.sin(seed * 1.5) * 0.5 + 0.5) * 15);
+            const humidity = 40 + Math.floor((Math.sin(seed * 0.7) * 0.5 + 0.5) * 50);
+            return { wind, pressure, isRising, temp, humidity };
+        }
+
+        function calculateScore(data) {
+            let score = 75;
+            if (data.wind > 4) score -= 30;
+            else if (data.wind > 3) score -= 10;
+            if (!data.isRising) score -= 15;
+            if (data.temp < 10 || data.temp > 32) score -= 10;
+            if (data.humidity > 90) score -= 5;
+            return Math.max(0, Math.min(100, score));
+        }
+
+        function getStatus(score) {
+            if (score >= 80) return { text: '非常适合', type: 'positive', color: 'var(--positive)', bg: 'var(--positive-bg)', glow: 'rgba(74,222,128,0.15)' };
+            if (score >= 60) return { text: '较为适合', type: 'warning', color: 'var(--warning)', bg: 'var(--warning-bg)', glow: 'rgba(251,191,36,0.15)' };
+            if (score >= 40) return { text: '一般', type: 'warning', color: 'var(--warning)', bg: 'var(--warning-bg)', glow: 'rgba(251,191,36,0.1)' };
+            return { text: '不适合', type: 'danger', color: 'var(--danger)', bg: 'var(--danger-bg)', glow: 'rgba(248,113,113,0.15)' };
+        }
+
+        function getAdvice(score, data) {
+            if (score >= 80) return { title: '爆护天！', text: '气压上升、风力适宜，鱼儿疯狂开口，带上装备出发吧！建议钓底，使用腥香饵料。' };
+            if (score >= 60) return { title: '可以出钓', text: data.wind > 3 ? '风力稍大，选择背风处或下风口作钓，使用重铅钓组。' : '条件尚可，选择合适钓点仍有收获。' };
+            if (score >= 40) return { title: '谨慎出钓', text: !data.isRising ? '气压下降，鱼浮头难钓，建议钓浮或半水。' : '条件一般，耐心守候或有惊喜。' };
+            return { title: '建议休息', text: data.wind > 4 ? '风力过大，抛竿困难且不安全，改日再钓。' : '天气条件差，鱼儿不开口，在家整理装备吧。' };
+        }
+
+        function getWindDesc(wind) {
+            const descs = ['无风', '软风', '轻风', '微风', '和风', '清风'];
+            return descs[wind] || '强风';
+        }
+
+        // ===== 渲染 =====
+        function renderToday() {
+            const data = getWeatherData(0);
+            const score = calculateScore(data);
+            const status = getStatus(score);
+            const advice = getAdvice(score, data);
+
+            // 分数
+            const scoreEl = document.getElementById('score-display');
+            scoreEl.innerHTML = score + '<span class="score-unit">分</span>';
+            scoreEl.style.color = status.color;
+
+            // 状态标签
+            const statusEl = document.getElementById('score-status');
+            statusEl.textContent = status.text;
+            statusEl.style.background = status.bg;
+            statusEl.style.color = status.color;
+
+            // 卡片光晕
+            document.getElementById('score-card').style.setProperty('--glow-color', status.glow);
+
+            // 建议
+            document.getElementById('advice-title').textContent = advice.title;
+            document.getElementById('advice-text').textContent = advice.text;
+            const adviceIcon = document.getElementById('advice-icon');
+            adviceIcon.style.background = status.bg;
+            adviceIcon.style.color = status.color;
+
+            // 数据
+            document.getElementById('wind-value').textContent = data.wind;
+            document.getElementById('wind-desc').textContent = getWindDesc(data.wind);
+            document.getElementById('pressure-value').textContent = data.pressure;
+            document.getElementById('pressure-trend').textContent = data.isRising ? '↗ 上升' : '↘ 下降';
+            document.getElementById('pressure-trend').style.color = data.isRising ? 'var(--positive)' : 'var(--danger)';
+            document.getElementById('temp-value').textContent = data.temp + '°C';
+            document.getElementById('temp-desc').textContent = data.temp > 28 ? '偏热' : data.temp < 15 ? '偏凉' : '舒适';
+            document.getElementById('humidity-value').textContent = data.humidity + '%';
+            document.getElementById('humidity-desc').textContent = data.humidity > 80 ? '潮湿' : data.humidity < 40 ? '干燥' : '适中';
+
+            // 标签
+            const tags = [];
+            if (data.wind <= 2) tags.push({ text: '风力适宜', type: 'positive' });
+            if (data.wind > 4) tags.push({ text: '大风预警', type: 'danger' });
+            if (data.isRising) tags.push({ text: '气压上升', type: 'positive' });
+            else tags.push({ text: '气压下降', type: 'danger' });
+            if (data.temp >= 18 && data.temp <= 25) tags.push({ text: '温度黄金', type: 'positive' });
+            if (score >= 80) tags.push({ text: '爆护天', type: 'positive' });
+
+            const tagIcons = {
+                positive: '<svg viewBox="0 0 24 24" fill="none"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" fill="currentColor"/></svg>',
+                danger: '<svg viewBox="0 0 24 24" fill="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor"/></svg>',
+                warning: '<svg viewBox="0 0 24 24" fill="none"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" fill="currentColor"/></svg>'
+            };
+            const tagColors = {
+                positive: { color: 'var(--positive)', bg: 'var(--positive-bg)' },
+                danger: { color: 'var(--danger)', bg: 'var(--danger-bg)' },
+                warning: { color: 'var(--warning)', bg: 'var(--warning-bg)' }
+            };
+
+            document.getElementById('detail-tags').innerHTML = tags.map(t => {
+                const c = tagColors[t.type];
+                return `<span class="tag" style="background: ${c.bg}; color: ${c.color};">${tagIcons[t.type]}${t.text}</span>`;
+            }).join('');
+
+            // 定位
+            document.getElementById('location-text').textContent = '南京 · 模拟数据';
+        }
+
+        function renderForecast() {
+            const list = document.getElementById('forecast-list');
+            let html = '';
+            const today = new Date();
+            for (let i = 1; i <= 7; i++) {
+                const date = new Date(today);
+                date.setDate(date.getDate() + i);
+                const data = getWeatherData(i);
+                const score = calculateScore(data);
+                const status = getStatus(score);
+                const dayName = i === 1 ? '明天' : weekDays[date.getDay()];
+                const dateStr = (date.getMonth() + 1) + '/' + date.getDate();
+                html += `
+                    <div class="forecast-item">
+                        <div class="forecast-day">${dayName}</div>
+                        <div class="forecast-date">${dateStr}</div>
+                        <div class="forecast-score" style="color: ${status.color}">${score}</div>
+                        <div class="forecast-bar">
+                            <div class="forecast-bar-fill" style="width: ${score}%; background: ${status.color}"></div>
+                        </div>
+                    </div>
+                `;
+            }
+            list.innerHTML = html;
+        }
+
+        function renderTips() {
+            const grid = document.getElementById('tips-grid');
+            // 每天显示不同的2个技巧
+            const dayIndex = new Date().getDate() % fishingTips.length;
+            const tips = [fishingTips[dayIndex], fishingTips[(dayIndex + 1) % fishingTips.length]];
+            grid.innerHTML = tips.map(t => `
+                <div class="tip-card" onclick="showTipDetail('${t.title}', '${t.desc}')">
+                    <div class="icon" style="background: ${t.bg}; color: ${t.color};">
+                        <span style="font-size: 18px;">${t.icon}</span>
+                    </div>
+                    <h4>${t.title}</h4>
+                    <p>${t.desc}</p>
+                </div>
+            `).join('');
+        }
+
+        function showTipDetail(title, desc) {
+            document.getElementById('install-guide-text').innerHTML = `<strong>${title}</strong><br><br>${desc}`;
+            document.getElementById('modal-overlay').classList.add('show');
+        }
+
+        function refreshAll() {
+            const btn = document.querySelector('.refresh-btn');
+            btn.innerHTML = '<span class="loading"></span> 刷新中...';
+            setTimeout(() => {
+                renderToday();
+                renderForecast();
+                btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor"/></svg> 刷新评估`;
+            }, 800);
+        }
+
+        function updateTime() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const mins = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('current-time').textContent = hours + ':' + mins;
+        }
+
+        // ===== 安装提示 =====
+        let deferredPrompt = null;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            if (!localStorage.getItem('installDismissed')) {
+                document.getElementById('install-banner').classList.add('show');
+            }
+        });
+
+        function showInstallGuide() {
+            document.getElementById('install-guide-text').innerHTML = `
+                <strong>iPhone/iPad：</strong>点击 Safari 底部分享按钮 <span style="font-size:18px">⎋</span>，选择「添加到主屏幕」<br><br>
+                <strong>Android：</strong>点击 Chrome 菜单（⋮），选择「添加到主屏幕」或「安装应用」<br><br>
+                <strong>电脑 Chrome：</strong>点击地址栏右侧的「安装」图标 📲
+            `;
+            document.getElementById('modal-overlay').classList.add('show');
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choice) => {
+                    if (choice.outcome === 'accepted') {
+                        document.getElementById('install-banner').classList.remove('show');
+                    }
+                    deferredPrompt = null;
+                });
+            }
+        }
+
+        function dismissInstall() {
+            document.getElementById('install-banner').classList.remove('show');
+            localStorage.setItem('installDismissed', '1');
+        }
+
+        function closeModal(e) {
+            if (!e || e.target === document.getElementById('modal-overlay')) {
+                document.getElementById('modal-overlay').classList.remove('show');
+            }
+        }
+
+        // ===== Service Worker =====
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(() => {});
+        }
+
+        // ===== 初始化 =====
+        renderToday();
+        renderForecast();
+        renderTips();
+        updateTime();
+        setInterval(updateTime, 60000);
+    </script>
+</body>
+</html>
